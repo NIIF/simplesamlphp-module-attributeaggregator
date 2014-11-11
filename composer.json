@@ -1,5 +1,5 @@
 {
-    "name": "NIIF/simplesamlphp-module-attributeaggregator",
+    "name": "niif/simplesamlphp-module-attributeaggregator",
     "description": "Attribute Aggregator implementation or SAML AttributeQuery",
     "type": "simplesamlphp-module",
     "require": {
