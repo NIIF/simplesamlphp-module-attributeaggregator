@@ -1,0 +1,8 @@
+{
+    "name": "simplesamlphp/attributeaggregator",
+    "description": "Attribute Aggregator implementation or SAML AttributeQuery",
+    "type": "simplesamlphp-module",
+    "require": {
+        "simplesamlphp/composer-module-installer": "~1.0"
+    }
+}
