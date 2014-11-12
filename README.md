@@ -9,6 +9,12 @@ filter to run after the federated id, usually eduPersonPrincipalName is resolved
 
   * [Read more about processing filters in simpleSAMLphp](simplesamlphp-authproc)
 
+Install
+-------------------------------
+
+You can install the module with composer:
+
+    composer require niif/simplesaml-module-attributeaggregator 1.*
 
 How to setup the attributeaggregator module
 -------------------------------
