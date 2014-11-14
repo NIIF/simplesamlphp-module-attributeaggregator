@@ -12,9 +12,13 @@ filter to run after the federated id, usually eduPersonPrincipalName is resolved
 Install
 -------------------------------
 
-You can install the module with composer:
+You can install the module with composer, insert the next row into the composer.json
 
-    composer require niif/simplesaml-module-attributeaggregator 1.*
+    "require": {
+      ...
+      "niif/simplesamlphp-module-attributeaggregator": "1.*",
+      ...
+    }
 
 How to setup the attributeaggregator module
 -------------------------------
