@@ -1,6 +1,6 @@
 <?php
 
-$session = SimpleSAML_Session::getInstance();
+$session = SimpleSAML_Session::getSessionFromRequest();
 $metadata = SimpleSAML_Metadata_MetaDataStorageHandler::getMetadataHandler();
 
 if (!array_key_exists('StateId', $_REQUEST)) {
