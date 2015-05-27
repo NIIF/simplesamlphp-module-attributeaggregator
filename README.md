@@ -22,12 +22,6 @@ How to setup the attributeaggregator module
 The only required option of the module is the `entityId` of the Attribute Authority to 
 be queried. The AA must support `urn:oasis:names:tc:SAML:2.0:bindings:SOAP` binding.
 
-
-To enable the module, create an `enable` file in the
-module directory:
-
-    touch modules/attributeaggregator/enable
-
 Example:
 
                 59 => array(
