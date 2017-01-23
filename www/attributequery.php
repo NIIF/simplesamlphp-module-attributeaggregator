@@ -169,6 +169,6 @@ function sendQuery($dataId, $url, $nameId, $attributes, $attributeNameFormat,$sr
 	SimpleSAML_Logger::debug('[attributeaggregator] - sending attribute query: '.var_export($query,1));
 	$binding = new SAML2_SOAPClient();
 
-	$result = $binding->send($query,$src);
+	$result = $binding->send($query, $src, $dst);
 	return $result;
 }
