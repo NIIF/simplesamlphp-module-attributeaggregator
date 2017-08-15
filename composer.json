@@ -3,7 +3,8 @@
     "description": "Attribute Aggregator implementation or SAML AttributeQuery",
     "type": "simplesamlphp-module",
     "require": {
-        "simplesamlphp/composer-module-installer": "~1.1"
+        "simplesamlphp/composer-module-installer": "~1.1",
+        "ext-soap": "^7.0"
     },
         "require-dev": {
         "simplesamlphp/simplesamlphp": "1.14",
