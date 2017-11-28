@@ -78,15 +78,7 @@ $dst = $metadata->getMetaDataConfig($state['attributeaggregator:entityId'],'attr
 try {
 	$response = sendQuery($dataId, $data['url'], $nameId, $attributes_to_send, $attributeNameFormat, $src, $dst);	
 } catch (Exception $e) {
-	throw new SimpleSAML_Error_Exception('[attributeaggregator] Error in sending query. ' .$e);
-}
-
-
- /* Getting the response */
-SimpleSAML_Logger::debug('[attributeaggregator] attributequery - getting response');
-
-if (!($response instanceof SAML2_Response)) {
-	throw new SimpleSAML_Error_Exception('Unexpected message received in response to the attribute query.');
+	throw new SimpleSAML_Error_Exception('[attributeaggregator] Got an exception while performing attribute query. Exception: '.get_class($e).', message: '.$e->getMessage());
 }
 
 $idpEntityId = $response->getIssuer();
