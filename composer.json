@@ -6,8 +6,8 @@
         "simplesamlphp/composer-module-installer": "~1.1",
         "ext-soap": "^7.0"
     },
-        "require-dev": {
-        "simplesamlphp/simplesamlphp": "1.14",
+    "require-dev": {
+        "simplesamlphp/simplesamlphp": ">=1.14",
         "phpunit/phpunit": "~3.7"
     },
     "autoload-dev": {
