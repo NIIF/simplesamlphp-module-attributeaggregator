@@ -37,7 +37,7 @@ class sspmod_attributeaggregator_Auth_Process_attributeaggregator extends Simple
 	 * nameIdFormat, the format of the attributeId. Default is "urn:oasis:names:tc:SAML:2.0:nameid-format:persistent";
 	 * @var unknown_type
 	 */
-	private $nameIdFormat = SAML2_Const::NAMEID_PERSISTENT;
+	private $nameIdFormat = SAML2\Constants::NAMEID_PERSISTENT;
 
 
 	/**
@@ -93,10 +93,10 @@ class sspmod_attributeaggregator_Auth_Process_attributeaggregator extends Simple
 
 		if (!empty($config["nameIdFormat"])){
 			foreach (array(
-							SAML2_Const::NAMEID_UNSPECIFIED,
-							SAML2_Const::NAMEID_PERSISTENT,
-							SAML2_Const::NAMEID_TRANSIENT,
-							SAML2_Const::NAMEID_ENCRYPTED) as $format) {
+							SAML2\Constants::NAMEID_UNSPECIFIED,
+							SAML2\Constants::NAMEID_PERSISTENT,
+							SAML2\Constants::NAMEID_TRANSIENT,
+							SAML2\Constants::NAMEID_ENCRYPTED) as $format) {
 				$invalid = TRUE;
 				if ($config["nameIdFormat"] == $format) {
 					$this->nameIdFormat = $config["nameIdFormat"];
@@ -133,9 +133,9 @@ class sspmod_attributeaggregator_Auth_Process_attributeaggregator extends Simple
 
 		if (!empty($config["attributeNameFormat"])){
 			foreach (array(
-							SAML2_Const::NAMEFORMAT_UNSPECIFIED,
-							SAML2_Const::NAMEFORMAT_URI,
-							SAML2_Const::NAMEFORMAT_BASIC) as $format) {
+							SAML2\Constants::NAMEFORMAT_UNSPECIFIED,
+							SAML2\Constants::NAMEFORMAT_URI,
+							SAML2\Constants::NAMEFORMAT_BASIC) as $format) {
 				$invalid = TRUE;
 				if ($config["attributeNameFormat"] == $format) {
 					$this->attributeNameFormat = $config["attributeNameFormat"];

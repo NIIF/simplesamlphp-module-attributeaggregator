@@ -17,7 +17,7 @@ $aaMetadata = $metadata->getMetadata($state['attributeaggregator:entityId'],'att
 /* Find an AttributeService with SOAP binding */
 $aas = $aaMetadata['AttributeService'];
 for ($i=0;$i<count($aas);$i++){
-	if ($aas[$i]['Binding'] == SAML2_Const::BINDING_SOAP){
+	if ($aas[$i]['Binding'] == SAML2\Constants::BINDING_SOAP){
 		$index = $i;
 		break;
 	}
@@ -85,7 +85,7 @@ try {
  /* Getting the response */
 SimpleSAML_Logger::debug('[attributeaggregator] attributequery - getting response');
 
-if (!($response instanceof SAML2_Response)) {
+if (!($response instanceof SAML2\Response)) {
 	throw new SimpleSAML_Error_Exception('Unexpected message received in response to the attribute query.');
 }
 
@@ -151,7 +151,7 @@ function sendQuery($dataId, $url, $nameId, $attributes, $attributeNameFormat,$sr
 
 	SimpleSAML_Logger::debug('[attributeaggregator] - sending request');
 
-	$query = new SAML2_AttributeQuery();
+	$query = new SAML2\AttributeQuery();
 	$query->setRelayState($dataId);
 	$query->setDestination($url);
 	$query->setIssuer($src->getValue('entityid'));
@@ -167,7 +167,7 @@ function sendQuery($dataId, $url, $nameId, $attributes, $attributeNameFormat,$sr
 	}
 	
 	SimpleSAML_Logger::debug('[attributeaggregator] - sending attribute query: '.var_export($query,1));
-	$binding = new SAML2_SOAPClient();
+	$binding = new SAML2\SOAPClient();
 
 	$result = $binding->send($query, $src, $dst);
 	return $result;
