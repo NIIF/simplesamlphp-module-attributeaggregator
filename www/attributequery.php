@@ -1,30 +1,30 @@
 <?php
 
-$session = SimpleSAML_Session::getSessionFromRequest();
-$metadata = SimpleSAML_Metadata_MetaDataStorageHandler::getMetadataHandler();
+$session = SimpleSAML\Session::getSessionFromRequest();
+$metadata = SimpleSAML\Metadata\MetaDataStorageHandler::getMetadataHandler();
 
 if (!array_key_exists('StateId', $_REQUEST)) {
-	throw new SimpleSAML_Error_BadRequest(
+	throw new SimpleSAML\Error\BadRequest(
 			'[attributeaggregator] - Missing required StateId query parameter.'
 	);
 }
 
 $id = $_REQUEST['StateId'];
-$state = SimpleSAML_Auth_State::loadState($id, 'attributeaggregator:request');
-SimpleSAML_Logger::info('[attributeaggregator] - Querying attributes from ' . $state['attributeaggregator:entityId'] );
+$state = SimpleSAML\Auth\State::loadState($id, 'attributeaggregator:request');
+SimpleSAML\Logger::info('[attributeaggregator] - Querying attributes from ' . $state['attributeaggregator:entityId'] );
 $aaMetadata = $metadata->getMetadata($state['attributeaggregator:entityId'],'attributeauthority-remote');
 
 /* Find an AttributeService with SOAP binding */
 $aas = $aaMetadata['AttributeService'];
 for ($i=0;$i<count($aas);$i++){
-	if ($aas[$i]['Binding'] == SAML2_Const::BINDING_SOAP){
+	if ($aas[$i]['Binding'] == SAML2\Constants::BINDING_SOAP){
 		$index = $i;
 		break;
 	}
 }
 
 if (empty($aas[$index]['Location'])) {
-	throw new SimplesSAML_Error("Can't find the AttributeService endpoint to send the attribute query.");
+	throw new SimpleSAML\Error("Can't find the AttributeService endpoint to send the attribute query.");
 }
 $url = $aas[$index]['Location'];
 
@@ -41,7 +41,7 @@ $data['stateId'] = $id;
 
 /* Building the query */
 
-$dataId = SimpleSAML_Utilities::generateID();
+$dataId = SimpleSAML\Utilities::generateID();
 $session->setData('attributeaggregator:data', $dataId, $data, 3600);
 
 $nameId = array(
@@ -70,7 +70,7 @@ foreach ($attributes as $name => $params) {
 
 $attributeNameFormat = $state['attributeaggregator:attributeNameFormat'];
 
-$authsource = SimpleSAML_Auth_Source::getById($state["attributeaggregator:authsourceId"]);
+$authsource = SimpleSAML\Auth\Source::getById($state["attributeaggregator:authsourceId"]);
 $src = $authsource->getMetadata();
 $dst = $metadata->getMetaDataConfig($state['attributeaggregator:entityId'],'attributeauthority-remote');
 
@@ -78,12 +78,12 @@ $dst = $metadata->getMetaDataConfig($state['attributeaggregator:entityId'],'attr
 try {
 	$response = sendQuery($dataId, $data['url'], $nameId, $attributes_to_send, $attributeNameFormat, $src, $dst);	
 } catch (Exception $e) {
-	throw new SimpleSAML_Error_Exception('[attributeaggregator] Got an exception while performing attribute query. Exception: '.get_class($e).', message: '.$e->getMessage());
+	throw new SimpleSAML\Error\Exception('[attributeaggregator] Got an exception while performing attribute query. Exception: '.get_class($e).', message: '.$e->getMessage());
 }
 
 $idpEntityId = $response->getIssuer();
 if ($idpEntityId === NULL) {
-	throw new SimpleSAML_Error_Exception('Missing issuer in response.');
+	throw new SimpleSAML\Error\Exception('Missing issuer in response.');
 }
 $assertions = $response->getAssertions();
 $attributes_from_aa = $assertions[0]->getAttributes();
@@ -128,8 +128,8 @@ foreach ($attributes_from_aa as $name=>$values){
 	}
 }
 
-SimpleSAML_Logger::debug('[attributeaggregator] - Attributes now:'.var_export($state['Attributes'],true));
-SimpleSAML_Auth_ProcessingChain::resumeProcessing($state);
+SimpleSAML\Logger::debug('[attributeaggregator] - Attributes now:'.var_export($state['Attributes'],true));
+SimpleSAML\Auth\ProcessingChain::resumeProcessing($state);
 exit;
 
 /**
@@ -141,9 +141,9 @@ function sendQuery($dataId, $url, $nameId, $attributes, $attributeNameFormat,$sr
 	assert('is_array($nameId)');
 	assert('is_array($attributes)');
 
-	SimpleSAML_Logger::debug('[attributeaggregator] - sending request');
+	SimpleSAML\Logger::debug('[attributeaggregator] - sending request');
 
-	$query = new SAML2_AttributeQuery();
+	$query = new SAML2\AttributeQuery();
 	$query->setRelayState($dataId);
 	$query->setDestination($url);
 	$query->setIssuer($src->getValue('entityid'));
@@ -152,14 +152,14 @@ function sendQuery($dataId, $url, $nameId, $attributes, $attributeNameFormat,$sr
 	if (! empty($attributes)){
 		$query->setAttributes($attributes);
 	}
-	sspmod_saml_Message::addSign($src,$dst,$query);
+	SAML2\Message::addSign($src,$dst,$query);
 
 	if (! $query->getSignatureKey()){
-		throw new SimpleSAML_Error_Exception('[attributeaggregator] - Unable to find private key for signing attribute request.');
+		throw new SimpleSAML\Error\Exception('[attributeaggregator] - Unable to find private key for signing attribute request.');
 	}
 	
-	SimpleSAML_Logger::debug('[attributeaggregator] - sending attribute query: '.var_export($query,1));
-	$binding = new SAML2_SOAPClient();
+	SimpleSAML\Logger::debug('[attributeaggregator] - sending attribute query: '.var_export($query,1));
+	$binding = new SAML2\SOAPClient();
 
 	$result = $binding->send($query, $src, $dst);
 	return $result;

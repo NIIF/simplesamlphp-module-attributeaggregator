@@ -8,7 +8,8 @@
  * @package simpleSAMLphp
  * @version $Id$
  */
-class sspmod_attributeaggregator_Auth_Process_attributeaggregator extends SimpleSAML_Auth_ProcessingFilter
+
+class sspmod_attributeaggregator_Auth_Process_attributeaggregator extends SimpleSAML\Auth\ProcessingFilter
 {
 
 	/**
@@ -37,7 +38,7 @@ class sspmod_attributeaggregator_Auth_Process_attributeaggregator extends Simple
 	 * nameIdFormat, the format of the attributeId. Default is "urn:oasis:names:tc:SAML:2.0:nameid-format:persistent";
 	 * @var unknown_type
 	 */
-	private $nameIdFormat = SAML2_Const::NAMEID_PERSISTENT;
+	private $nameIdFormat = SAML2\Constants::NAMEID_PERSISTENT;
 
 
 	/**
@@ -65,12 +66,12 @@ class sspmod_attributeaggregator_Auth_Process_attributeaggregator extends Simple
 		assert('is_array($config)');
 		parent::__construct($config, $reserved);
 
-		$metadata = SimpleSAML_Metadata_MetaDataStorageHandler::getMetadataHandler();
+		$metadata = SimpleSAML\Metadata\MetaDataStorageHandler::getMetadataHandler();
 
 		if ($config['entityId']) {
 			$aameta = $metadata->getMetaData($config['entityId'], 'attributeauthority-remote');
 			if (!$aameta) {
-				throw new SimpleSAML_Error_Exception(
+				throw new SimpleSAML\Error\Exception(
                     'attributeaggregator: AA entityId (' . $config['entityId'] .
 					') does not exist in the attributeauthority-remote metadata set.'
 				);
@@ -78,7 +79,7 @@ class sspmod_attributeaggregator_Auth_Process_attributeaggregator extends Simple
 			$this->entityId = $config['entityId'];
 		}
 		else {
-			throw new SimpleSAML_Error_Exception(
+			throw new SimpleSAML\Error\Exception(
                     'attributeaggregator: AA entityId is not specified in the configuration.'
 				);
 		}
@@ -93,10 +94,10 @@ class sspmod_attributeaggregator_Auth_Process_attributeaggregator extends Simple
 
 		if (!empty($config["nameIdFormat"])){
 			foreach (array(
-							SAML2_Const::NAMEID_UNSPECIFIED,
-							SAML2_Const::NAMEID_PERSISTENT,
-							SAML2_Const::NAMEID_TRANSIENT,
-							SAML2_Const::NAMEID_ENCRYPTED) as $format) {
+							SAML2\Constants::NAMEID_UNSPECIFIED,
+							SAML2\Constants::NAMEID_PERSISTENT,
+							SAML2\Constants::NAMEID_TRANSIENT,
+							SAML2\Constants::NAMEID_ENCRYPTED) as $format) {
 				$invalid = TRUE;
 				if ($config["nameIdFormat"] == $format) {
 					$this->nameIdFormat = $config["nameIdFormat"];
@@ -105,25 +106,25 @@ class sspmod_attributeaggregator_Auth_Process_attributeaggregator extends Simple
 				}
 			}
 			if ($invalid)
-				throw new SimpleSAML_Error_Exception("attributeaggregator: Invalid nameIdFormat: ".$config["nameIdFormat"]);
+				throw new SimpleSAML\Error\Exception("attributeaggregator: Invalid nameIdFormat: ".$config["nameIdFormat"]);
 		}
 
 		if (!empty($config["attributes"])){
 			if (! is_array($config["attributes"])) {
-				throw new SimpleSAML_Error_Exception("attributeaggregator: Invalid format of attributes array in the configuration");
+				throw new SimpleSAML\Error\Exception("attributeaggregator: Invalid format of attributes array in the configuration");
 			}
 			foreach ($config["attributes"] as $attribute) {
 				if (! is_array($attribute)) {
-					throw new SimpleSAML_Error_Exception("attributeaggregator: Invalid format of attributes array in the configuration");
+					throw new SimpleSAML\Error\Exception("attributeaggregator: Invalid format of attributes array in the configuration");
 				}
 				if (array_key_exists("values", $attribute)) {
 					if (! is_array($attribute["values"])) {
-						throw new SimpleSAML_Error_Exception("attributeaggregator: Invalid format of attributes array in the configuration");
+						throw new SimpleSAML\Error\Exception("attributeaggregator: Invalid format of attributes array in the configuration");
 					}	
 				}
 				if (array_key_exists('multiSource', $attribute)){
 					if(! preg_match('/^(merge|keep|override)$/', $attribute['multiSource']))
-						throw new SimpleSAML_Error_Exception(
+						throw new SimpleSAML\Error\Exception(
                     		'attributeaggregator: Invalid multiSource value '.$attribute['multiSource'].' for '.key($attribute).'. It not mached keep, merge or override.'
 					);
 				}
@@ -133,9 +134,9 @@ class sspmod_attributeaggregator_Auth_Process_attributeaggregator extends Simple
 
 		if (!empty($config["attributeNameFormat"])){
 			foreach (array(
-							SAML2_Const::NAMEFORMAT_UNSPECIFIED,
-							SAML2_Const::NAMEFORMAT_URI,
-							SAML2_Const::NAMEFORMAT_BASIC) as $format) {
+							SAML2\Constants::NAMEFORMAT_UNSPECIFIED,
+							SAML2\Constants::NAMEFORMAT_URI,
+							SAML2\Constants::NAMEFORMAT_BASIC) as $format) {
 				$invalid = TRUE;
 				if ($config["attributeNameFormat"] == $format) {
 					$this->attributeNameFormat = $config["attributeNameFormat"];
@@ -144,7 +145,7 @@ class sspmod_attributeaggregator_Auth_Process_attributeaggregator extends Simple
 				}
 			}
 			if ($invalid)
-				throw new SimpleSAML_Error_Exception("attributeaggregator: Invalid attributeNameFormat: ".$config["attributeNameFormat"], 1);
+				throw new SimpleSAML\Error\Exception("attributeaggregator: Invalid attributeNameFormat: ".$config["attributeNameFormat"], 1);
 		}
 	}
 
@@ -172,16 +173,16 @@ class sspmod_attributeaggregator_Auth_Process_attributeaggregator extends Simple
 
 		if (! $state['attributeaggregator:attributeId']){
 			if (! $this->required) {
-				SimpleSAML_Logger::info('[attributeaggregator] This user session does not have '.$this->attributeId.', which is required for querying the AA! Continue processing.');
-				SimpleSAML_Logger::debug('[attributeaggregator] Attributes are: '.var_export($state['Attributes'],true));
-				SimpleSAML_Auth_ProcessingChain::resumeProcessing($state);
+				SimpleSAML\Logger::info('[attributeaggregator] This user session does not have '.$this->attributeId.', which is required for querying the AA! Continue processing.');
+				SimpleSAML\Logger::debug('[attributeaggregator] Attributes are: '.var_export($state['Attributes'],true));
+				SimpleSAML\Auth\ProcessingChain::resumeProcessing($state);
 			}	
-			throw new SimpleSAML_Error_Exception("This user session does not have ".$this->attributeId.", which is required for querying the AA! Attributes are: ".var_export($state['Attributes'],1));
+			throw new SimpleSAML\Error\Exception("This user session does not have ".$this->attributeId.", which is required for querying the AA! Attributes are: ".var_export($state['Attributes'],1));
 		}
 		
 		// Save state and redirect
-		$id  = SimpleSAML_Auth_State::saveState($state, 'attributeaggregator:request');
-		$url = SimpleSAML_Module::getModuleURL('attributeaggregator/attributequery.php');
-		SimpleSAML_Utilities::redirect($url, array('StateId' => $id)); // FIXME: redirect is deprecated
+		$id  = SimpleSAML\Auth\State::saveState($state, 'attributeaggregator:request');
+		$url = SimpleSAML\Module::getModuleURL('attributeaggregator/attributequery.php');
+		SimpleSAML\Utilities::redirect($url, array('StateId' => $id)); // FIXME: redirect is deprecated
 	}
 }
