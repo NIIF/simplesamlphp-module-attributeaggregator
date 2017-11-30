@@ -9,7 +9,7 @@ php:
 matrix:
   allow_failures:
   - php: hhvm
-before_script: composer update --dev
+before_script: apt-get install php-soap; composer update --dev
 script: php vendor/phpunit/phpunit/phpunit.php
 notifications:
   slack: eduid:JJc9VL5htezKWr40wEUTug8K
