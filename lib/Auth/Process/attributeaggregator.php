@@ -9,7 +9,7 @@
  * @version $Id$
  */
 
-class sspmod_attributeaggregator_Auth_Process_attributeaggregator extends SimpleSAML\Auth\ProcessingFilter
+class sspmod_attributeaggregator_Auth_Process_attributeaggregator extends SimpleSAML_Auth_ProcessingFilter
 {
 
     /**
@@ -66,7 +66,7 @@ class sspmod_attributeaggregator_Auth_Process_attributeaggregator extends Simple
         assert('is_array($config)');
         parent::__construct($config, $reserved);
 
-        $metadata = SimpleSAML\Metadata\MetaDataStorageHandler::getMetadataHandler();
+        $metadata = SimpleSAML_Metadata_MetaDataStorageHandler::getMetadataHandler();
 
         if ($config['entityId']) {
             $aameta = $metadata->getMetaData($config['entityId'], 'attributeauthority-remote');
@@ -175,14 +175,14 @@ class sspmod_attributeaggregator_Auth_Process_attributeaggregator extends Simple
             if (! $this->required) {
                 SimpleSAML\Logger::info('[attributeaggregator] This user session does not have '.$this->attributeId.', which is required for querying the AA! Continue processing.');
                 SimpleSAML\Logger::debug('[attributeaggregator] Attributes are: '.var_export($state['Attributes'],true));
-                SimpleSAML\Auth\ProcessingChain::resumeProcessing($state);
+                SimpleSAML_Auth_ProcessingChain::resumeProcessing($state);
             }    
             throw new SimpleSAML\Error\Exception("This user session does not have ".$this->attributeId.", which is required for querying the AA! Attributes are: ".var_export($state['Attributes'],1));
         }
         
         // Save state and redirect
-        $id  = SimpleSAML\Auth\State::saveState($state, 'attributeaggregator:request');
+        $id  = SimpleSAML_Auth_State::saveState($state, 'attributeaggregator:request');
         $url = SimpleSAML\Module::getModuleURL('attributeaggregator/attributequery.php');
-        SimpleSAML\Utilities::redirect($url, array('StateId' => $id)); // FIXME: redirect is deprecated
+        SimpleSAML_Utilities::redirect($url, array('StateId' => $id)); // FIXME: redirect is deprecated
     }
 }

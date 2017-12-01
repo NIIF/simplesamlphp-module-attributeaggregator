@@ -1,7 +1,7 @@
 <?php
 
-$session = SimpleSAML\Session::getSessionFromRequest();
-$metadata = SimpleSAML\Metadata\MetaDataStorageHandler::getMetadataHandler();
+$session = SimpleSAML_Session::getSessionFromRequest();
+$metadata = SimpleSAML_Metadata_MetaDataStorageHandler::getMetadataHandler();
 
 if (!array_key_exists('StateId', $_REQUEST)) {
 	throw new SimpleSAML\Error\BadRequest(
@@ -10,7 +10,7 @@ if (!array_key_exists('StateId', $_REQUEST)) {
 }
 
 $id = $_REQUEST['StateId'];
-$state = SimpleSAML\Auth\State::loadState($id, 'attributeaggregator:request');
+$state = SimpleSAML_Auth_State::loadState($id, 'attributeaggregator:request');
 SimpleSAML\Logger::info('[attributeaggregator] - Querying attributes from ' . $state['attributeaggregator:entityId'] );
 $aaMetadata = $metadata->getMetadata($state['attributeaggregator:entityId'],'attributeauthority-remote');
 
@@ -41,7 +41,7 @@ $data['stateId'] = $id;
 
 /* Building the query */
 
-$dataId = SimpleSAML\Utilities::generateID();
+$dataId = SimpleSAML_Utilities::generateID();
 $session->setData('attributeaggregator:data', $dataId, $data, 3600);
 
 $nameId = array(
@@ -70,7 +70,7 @@ foreach ($attributes as $name => $params) {
 
 $attributeNameFormat = $state['attributeaggregator:attributeNameFormat'];
 
-$authsource = SimpleSAML\Auth\Source::getById($state["attributeaggregator:authsourceId"]);
+$authsource = SimpleSAML_Auth_Source::getById($state["attributeaggregator:authsourceId"]);
 $src = $authsource->getMetadata();
 $dst = $metadata->getMetaDataConfig($state['attributeaggregator:entityId'],'attributeauthority-remote');
 
@@ -129,7 +129,7 @@ foreach ($attributes_from_aa as $name=>$values){
 }
 
 SimpleSAML\Logger::debug('[attributeaggregator] - Attributes now:'.var_export($state['Attributes'],true));
-SimpleSAML\Auth\ProcessingChain::resumeProcessing($state);
+SimpleSAML_Auth_ProcessingChain::resumeProcessing($state);
 exit;
 
 /**
@@ -152,7 +152,7 @@ function sendQuery($dataId, $url, $nameId, $attributes, $attributeNameFormat,$sr
 	if (! empty($attributes)){
 		$query->setAttributes($attributes);
 	}
-	SAML2\Message::addSign($src,$dst,$query);
+	sspmod_saml_Message::addSign($src,$dst,$query);
 
 	if (! $query->getSignatureKey()){
 		throw new SimpleSAML\Error\Exception('[attributeaggregator] - Unable to find private key for signing attribute request.');
