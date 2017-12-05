@@ -243,15 +243,11 @@ class sspmod_attributeaggregator_Auth_Process_attributeaggregator extends Simple
             }
             $this->mergeAttributes($state, $assertion->getAttributes());
         
-        } catch (RuntimeException $e) {
+        } catch (Exception $e) {
             SimpleSAML\Logger::info("Attribute query failed: ".$e->getMessage());
             if ($this->required) {
-                throw new SimpleSAML\Error\Exception($e->getMessage());
+                throw $e;
             }
-        } catch (Exception $e) {
-            SimpleSAML\Logger::error("Error during attribute query: ".get_class($e).
-                ' '.$e->getMessage());
-            throw $e;
         }
     }
 
