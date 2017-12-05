@@ -344,12 +344,16 @@ class sspmod_attributeaggregator_Auth_Process_attributeaggregator extends Simple
         if (empty(array_keys($this->attributes))) {
             return array();
         }
-        $requestedAttributes = array_flip($this->attributes);
+        $requestedAttributes = array_flip(array_keys($this->attributes));
         if(array_key_exists('*',$requestedAttributes)) {
             unset($requestedAttributes['*']);
         }
         foreach ($requestedAttributes as $attribute) {
-            // we don't request specific values
+            /* Reasons for NOT including the acceptable values in the request:
+             *   - the SP might not want to let the AA know which values it accepts,
+             *   - we can't rely on that the AA sends the matching values anyway,
+             *   - in the future we might support regexp in the values array.
+             */
             $requestedAttribute[$attribute] = array();
         }
         return $requestedAttributes;
