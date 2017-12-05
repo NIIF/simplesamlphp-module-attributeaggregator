@@ -5,7 +5,7 @@
     "require": {
         "simplesamlphp/composer-module-installer": "~1.1",
         "simplesamlphp/saml2": ">=3.0",
-        "ext-soap": "^7.0"
+        "ext-soap": "*"
     },
     "require-dev": {
         "simplesamlphp/simplesamlphp": ">=1.14",

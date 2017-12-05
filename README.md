@@ -1,7 +1,7 @@
 Attribute Aggregator module
 ==============
 
-[![Latest Stable Version](https://poser.pugx.org/niif/simplesamlphp-module-attributeaggregator/v/stable)](https://packagist.org/packages/niif/simplesamlphp-module-attributeaggregator) [![Total Downloads](https://poser.pugx.org/niif/simplesamlphp-module-attributeaggregator/downloads)](https://packagist.org/packages/niif/simplesamlphp-module-attributeaggregator)
+[![Latest Stable Version](https://poser.pugx.org/niif/simplesamlphp-module-attributeaggregator/v/stable)](https://packagist.org/packages/niif/simplesamlphp-module-attributeaggregator) [![Total Downloads](https://poser.pugx.org/niif/simplesamlphp-module-attributeaggregator/downloads)](https://packagist.org/packages/niif/simplesamlphp-module-attributeaggregator) [![Travis](https://travis-ci.org/NIIF/simplesamlphp-module-attributeaggregator.svg?branch=master)](https://travis-ci.org/NIIF/simplesamlphp-module-attributeaggregator.svg?branch=master)
 
 The Attribute Aggregator module collects attributes from a SAML2 Attribute Authority
 by using SAML Attribute Query. It is implemented as an Authentication Processing Filter
