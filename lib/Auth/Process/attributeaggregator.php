@@ -298,15 +298,10 @@ class sspmod_attributeaggregator_Auth_Process_attributeaggregator extends Simple
                     else {
                         self::merge_attribute_values($state,$name,$values);
                     }
-                } elseif (isset($mergePolicy) && $mergePolicy == 'keep') {
-                    // Got no old values for attribute but the instruction was to 'keep' it.
-                    // Add the attribute to the Attributes array, but issue a warning.
-                    // To prevent the inclusion of an attribute from the AA, make sure to
-                    // NOT specify it in the config, and NOT have a default rule ('*') either.
-                    // XXX not necessary: SimpleSAML\Logger::info("Set ".$name.", no values to preserve");
+                } else {
+                    // if the attribute hasn't existed yet, let's create it
+                    self::override_attribute_values($state,$name,$values);
                 }
-                // if the attribute hasn't existed yet, let's create it
-                self::override_attribute_values($state,$name,$values);
             }
             // the attribute isn't specified in the config
             // if we have _anything_ in the attribute config, we drop what we have just received,
