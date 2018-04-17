@@ -85,7 +85,7 @@ $idpEntityId = $response->getIssuer();
 if ($idpEntityId === NULL) {
 	throw new SimpleSAML_Error_Exception('Missing issuer in response.');
 }
-$assertions = $response->getAssertions();
+$assertions = sspmod_saml_Message::processResponse($src, $dst, $response);
 $attributes_from_aa = $assertions[0]->getAttributes();
 $expected_attributes = $state['attributeaggregator:attributes'];
 // get attributes from response, and put it in the state.
