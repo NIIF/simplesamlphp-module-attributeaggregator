@@ -8,7 +8,6 @@ if (!array_key_exists('StateId', $_REQUEST)) {
 			'[attributeaggregator] - Missing required StateId query parameter.'
 	);
 }
-
 $id = $_REQUEST['StateId'];
 $state = SimpleSAML_Auth_State::loadState($id, 'attributeaggregator:request');
 SimpleSAML_Logger::info('[attributeaggregator] - Querying attributes from ' . $state['attributeaggregator:entityId'] );
@@ -76,6 +75,7 @@ $dst = $metadata->getMetaDataConfig($state['attributeaggregator:entityId'],'attr
 
 // Sending query
 try {
+    /** @var $response */
 	$response = sendQuery($dataId, $data['url'], $nameId, $attributes_to_send, $attributeNameFormat, $src, $dst);	
 } catch (Exception $e) {
 	throw new SimpleSAML_Error_Exception('[attributeaggregator] Got an exception while performing attribute query. Exception: '.get_class($e).', message: '.$e->getMessage());
@@ -85,7 +85,15 @@ $idpEntityId = $response->getIssuer();
 if ($idpEntityId === NULL) {
 	throw new SimpleSAML_Error_Exception('Missing issuer in response.');
 }
-$assertions = $response->getAssertions();
+
+try {
+    $assertions = sspmod_saml_Message::processResponse($spMetadata, $idpMetadata, $response);
+} catch (sspmod_saml_Error $e) {
+    // the status of the response wasn't "success"
+    $e = $e->toException();
+    SimpleSAML_Auth_State::throwException($state, $e);
+}
+
 $attributes_from_aa = $assertions[0]->getAttributes();
 $expected_attributes = $state['attributeaggregator:attributes'];
 // get attributes from response, and put it in the state.
