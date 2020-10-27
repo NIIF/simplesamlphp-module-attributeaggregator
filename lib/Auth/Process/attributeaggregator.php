@@ -9,7 +9,7 @@
  * @version $Id$
  */
 
-class sspmod_attributeaggregator_Auth_Process_attributeaggregator extends SimpleSAML_Auth_ProcessingFilter
+class sspmod_attributeaggregator_Auth_Process_attributeaggregator extends SimpleSAML\Auth\ProcessingFilter
 {
 
     /**
@@ -59,7 +59,7 @@ class sspmod_attributeaggregator_Auth_Process_attributeaggregator extends Simple
     /**
      * The metadata of the AA
      *
-     * @var SimpleSAML_Configuration
+     * @var SimpleSAML\Configuration
      */
     private $aaMetadata;
 
@@ -73,7 +73,7 @@ class sspmod_attributeaggregator_Auth_Process_attributeaggregator extends Simple
     /**
      * The metadata of this SP
      *
-     * @var SimpleSAML_Configuration
+     * @var SimpleSAML\Configuration
      */
     private $selfMetadata;
 
@@ -90,7 +90,7 @@ class sspmod_attributeaggregator_Auth_Process_attributeaggregator extends Simple
         assert('is_array($config)');
         parent::__construct($config, $reserved);
 
-        $metadata = SimpleSAML_Metadata_MetaDataStorageHandler::getMetadataHandler();
+        $metadata = SimpleSAML\Metadata\MetaDataStorageHandler::getMetadataHandler();
 
         // XXX We can't initialize selfMetadata now, because we can't access $state here
         // $this->selfMetadata = $metadata->getMetaDataCurrent('saml20-sp-hosted') fails
@@ -141,7 +141,7 @@ class sspmod_attributeaggregator_Auth_Process_attributeaggregator extends Simple
         if (isset($config['entityId'])) {
             $this->entityId = $config['entityId'];
             try {
-                $this->aaMetadata = SimpleSAML_Configuration::loadFromArray(
+                $this->aaMetadata = SimpleSAML\Configuration::loadFromArray(
                     $metadata->getMetaData($this->entityId, 'attributeauthority-remote')
                 );
                 if ($this->aaMetadata->hasValue('AttributeService')) {
@@ -192,11 +192,10 @@ class sspmod_attributeaggregator_Auth_Process_attributeaggregator extends Simple
             SimpleSAML\Logger::error("Unable to access the auth source ID. Are we a SAML2 SP?");
             throw new SimpleSAML\Error\Exception("Unable to access the auth source ID");
         }
-        $authsource = simpleSAML_Auth_Source::getById($state["saml:sp:State"]["saml:sp:AuthId"]);
-        // This must be instanceof sspmod_saml_Auth_Source_SP
-        if (!($authsource instanceof sspmod_saml_auth_Source_SP)) {
-            // XXX The class name above might change in the future!
-            throw new SimpleSAML\ErrorException("Auth source is not a SAML SP");
+        $authsource = simpleSAML\Auth\Source::getById($state["saml:sp:State"]["saml:sp:AuthId"]);
+        // This must be instanceof SimpleSAML\Module\saml\Auth\Source\SP 
+        if (!($authsource instanceof SimpleSAML\Module\saml\Auth\Source\SP)) {
+            throw new SimpleSAML\Error\Exception("Auth source is not a SAML SP");
         }
         $this->selfMetadata = $authsource->getMetadata();
 
