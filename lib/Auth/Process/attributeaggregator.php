@@ -5,11 +5,27 @@
  * Filter for requesting the vo to give attributes to the SP.
  *
  * @author Gyula Szabó <gyufi@niif.hu>
+ * @author Gyula Szabó <gyufi@szabocsalad.com>
  * @package simpleSAMLphp
  * @version $Id$
  */
+namespace SimpleSAML\Module\attributeaggregator\Auth\Process;
 
-class sspmod_attributeaggregator_Auth_Process_attributeaggregator extends SimpleSAML\Auth\ProcessingFilter
+use SimpleSAML\Auth\ProcessingFilter;
+use SimpleSAML\Auth\Source;
+use SimpleSAML\Utils\Random;
+use SimpleSAML\Configuration;
+use SimpleSAML\Metadata\MetaDataStorageHandler;
+use SimpleSAML\Error\Exception;
+use SimpleSAML\Logger;
+use SimpleSAML\Module\saml\Message;
+
+use SAML2\Constants;
+use SAML2\AttributeQuery;
+use SAML2\XML\saml\NameID;
+use SAML2\SOAPClient;
+
+class attributeaggregator extends ProcessingFilter
 {
 
     /**
@@ -31,14 +47,14 @@ class sspmod_attributeaggregator_Auth_Process_attributeaggregator extends Simple
      * If set to TRUE, the module will throw an exception on runtime errors
      * @var boolean
      */
-    private $required = FALSE;
+    private $required = false;
 
     /**
      * 
      * nameIdFormat, the format of the attributeId. Default is "urn:oasis:names:tc:SAML:2.0:nameid-format:persistent";
      * @var unknown_type
      */
-    private $nameIdFormat = SAML2\Constants::NAMEID_PERSISTENT;
+    private $nameIdFormat = Constants::NAMEID_PERSISTENT;
 
 
     /**
@@ -59,7 +75,7 @@ class sspmod_attributeaggregator_Auth_Process_attributeaggregator extends Simple
     /**
      * The metadata of the AA
      *
-     * @var SimpleSAML\Configuration
+     * @var Configuration
      */
     private $aaMetadata;
 
@@ -73,7 +89,7 @@ class sspmod_attributeaggregator_Auth_Process_attributeaggregator extends Simple
     /**
      * The metadata of this SP
      *
-     * @var SimpleSAML\Configuration
+     * @var Configuration
      */
     private $selfMetadata;
 
@@ -90,7 +106,7 @@ class sspmod_attributeaggregator_Auth_Process_attributeaggregator extends Simple
         assert('is_array($config)');
         parent::__construct($config, $reserved);
 
-        $metadata = SimpleSAML\Metadata\MetaDataStorageHandler::getMetadataHandler();
+        $metadata = MetaDataStorageHandler::getMetadataHandler();
 
         // XXX We can't initialize selfMetadata now, because we can't access $state here
         // $this->selfMetadata = $metadata->getMetaDataCurrent('saml20-sp-hosted') fails
@@ -111,20 +127,20 @@ class sspmod_attributeaggregator_Auth_Process_attributeaggregator extends Simple
 
         if (!empty($config["attributes"])){
             if (! is_array($config["attributes"])) {
-                throw new SimpleSAML\Error\Exception("attributeaggregator: Invalid format of attributes array in the configuration");
+                throw new Exception("attributeaggregator: Invalid format of attributes array in the configuration");
             }
             foreach ($config["attributes"] as $attribute) {
                 if (! is_array($attribute)) {
-                    throw new SimpleSAML\Error\Exception("attributeaggregator: Invalid format of attributes array in the configuration");
+                    throw new Exception("attributeaggregator: Invalid format of attributes array in the configuration");
                 }
                 if (array_key_exists("values", $attribute)) {
                     if (! is_array($attribute["values"])) {
-                        throw new SimpleSAML\Error\Exception("attributeaggregator: Invalid format of attributes array in the configuration");
+                        throw new Exception("attributeaggregator: Invalid format of attributes array in the configuration");
                     }    
                 }
                 if (array_key_exists('multiSource', $attribute)){
                     if(! preg_match('/^(merge|keep|override)$/', $attribute['multiSource']))
-                        throw new SimpleSAML\Error\Exception(
+                        throw new Exception(
                             'attributeaggregator: Invalid multiSource value "'.
                             $attribute['multiSource'].'" for '.key($attribute).
                             '. Should be one of keep, merge or override.'
@@ -141,30 +157,30 @@ class sspmod_attributeaggregator_Auth_Process_attributeaggregator extends Simple
         if (isset($config['entityId'])) {
             $this->entityId = $config['entityId'];
             try {
-                $this->aaMetadata = SimpleSAML\Configuration::loadFromArray(
+                $this->aaMetadata = Configuration::loadFromArray(
                     $metadata->getMetaData($this->entityId, 'attributeauthority-remote')
                 );
                 if ($this->aaMetadata->hasValue('AttributeService')) {
                     foreach ($this->aaMetadata->getArray('AttributeService',array()) as $aa_endpoint) {
-                        if ($aa_endpoint['Binding'] == SAML2\Constants::BINDING_SOAP) {
+                        if ($aa_endpoint['Binding'] == Constants::BINDING_SOAP) {
                             $this->aaEndpoint = $aa_endpoint['Location'];
                             break;
                         }
                     }
                 }
                 if(empty($this->aaEndpoint)) {
-                    throw new RuntimeException($this->entityId.' does not have a usable AttributeService endpoint in metadata'.
-                    ' with binding '.SAML2\Constants::BINDING_SOAP);
+                    throw new \RuntimeException($this->entityId.' does not have a usable AttributeService endpoint in metadata'.
+                    ' with binding '. Constants::BINDING_SOAP);
                 }
-            } catch (Exception $e) {
-                SimpleSAML\Logger::warning('Unable to perform attribute query, no metadata for '.$this->entityId);
+            } catch (\Exception $e) {
+                Logger::warning('Unable to perform attribute query, no metadata for '.$this->entityId);
                 if ($this->required) {
                     throw $e;
                 }
             }
         }
         else {
-            throw new SimpleSAML\Error\Exception(
+            throw new Exception(
                     'attributeaggregator: AA entityId is not specified in the configuration.'
                 );
         }
@@ -182,20 +198,20 @@ class sspmod_attributeaggregator_Auth_Process_attributeaggregator extends Simple
         if (empty($this->aaMetadata) || empty($this->aaEndpoint)) {
             // We can not do anything without AA metadata but we may let others run
             // Should only reach here with $this->required===false
-            SimpleSAML\Logger::debug('No AA metadata, aborting attribute query');
+            Logger::debug('No AA metadata, aborting attribute query');
             return;
         }
 
         // We need to initialize $this->selfMetadata here, because we have just now learnt
         // the authsource we are using
         if (empty($state["saml:sp:State"]["saml:sp:AuthId"])) {
-            SimpleSAML\Logger::error("Unable to access the auth source ID. Are we a SAML2 SP?");
-            throw new SimpleSAML\Error\Exception("Unable to access the auth source ID");
+            Logger::error("Unable to access the auth source ID. Are we a SAML2 SP?");
+            throw new Exception("Unable to access the auth source ID");
         }
-        $authsource = simpleSAML\Auth\Source::getById($state["saml:sp:State"]["saml:sp:AuthId"]);
+        $authsource = Source::getById($state["saml:sp:State"]["saml:sp:AuthId"]);
         // This must be instanceof SimpleSAML\Module\saml\Auth\Source\SP 
-        if (!($authsource instanceof SimpleSAML\Module\saml\Auth\Source\SP)) {
-            throw new SimpleSAML\Error\Exception("Auth source is not a SAML SP");
+        if (!($authsource instanceof \SimpleSAML\Module\saml\Auth\Source\SP)) {
+            throw new Exception("Auth source is not a SAML SP");
         }
         $this->selfMetadata = $authsource->getMetadata();
 
@@ -203,15 +219,15 @@ class sspmod_attributeaggregator_Auth_Process_attributeaggregator extends Simple
             // verify that we are having all the necessary information
             if (empty($state['Attributes'][$this->attributeId]) ||
                 count($state['Attributes'][$this->attributeId]) > 1) {
-                throw new RuntimeException("Can't attempt attribute query, attribute ".
+                throw new \RuntimeException("Can't attempt attribute query, attribute ".
                     $this->attributeId." is not present or has multiple values");
             }
 
             // build attribute query
-            $query = new SAML2\AttributeQuery();
+            $query = new AttributeQuery();
             $query->setDestination($this->aaEndpoint);
             $query->setIssuer($this->selfMetadata->getValue('entityID'));
-            $nameid = SAML2\XML\saml\NameID::fromArray (
+            $nameid = NameID::fromArray (
                 array(
                     'Value' => $state['Attributes'][$this->attributeId][0],
                     'Format' => $this->nameIdFormat,
@@ -220,30 +236,30 @@ class sspmod_attributeaggregator_Auth_Process_attributeaggregator extends Simple
             $query->setNameId($nameid);
             $query->setAttributeNameFormat($this->attributeNameFormat);
             $query->setAttributes($this->getRequestedAttributes()); // may be empty, then it's a noop
-            $query->setID(SimpleSAML\Utils\Random::generateID());
+            $query->setID(Random::generateID());
             // TODO: should this call be made optional?
-            sspmod_saml_Message::addSign($this->selfMetadata,$this->aaMetadata,$query);
+            Message::addSign($this->selfMetadata,$this->aaMetadata,$query);
 
             // send attribute query
-            SimpleSAML\Logger::debug('Sending attribute query: '.var_export($query,true));
-            $binding = new SAML2\SOAPClient();
+            Logger::debug('Sending attribute query: '.var_export($query,true));
+            $binding = new SOAPClient();
             $response = $binding->send($query,$this->selfMetadata,$this->aaMetadata);
 
             // verify result
-            SimpleSAML\Logger::debug('Received attribute response: '.var_export($response,true));
+            Logger::debug('Received attribute response: '.var_export($response,true));
             if (!$response->isSuccess()) {
-                throw new RuntimeException('Got a SAML error on attribute query ('.
+                throw new \RuntimeException('Got a SAML error on attribute query ('.
                     $response->getStatus()['Code'].')');
             }
             // merge attributes
             $assertion = $response->getAssertions()[0]; // TODO Can there be more than 1?
             if (empty($assertion)) {
-                throw new RuntimeException('Got an empty SAML Response');
+                throw new \RuntimeException('Got an empty SAML Response');
             }
             $this->mergeAttributes($state, $assertion->getAttributes());
         
-        } catch (Exception $e) {
-            SimpleSAML\Logger::info("Attribute query failed: ".$e->getMessage());
+        } catch (\Exception $e) {
+            Logger::info("Attribute query failed: ".$e->getMessage());
             if ($this->required) {
                 throw $e;
             }
@@ -262,7 +278,7 @@ class sspmod_attributeaggregator_Auth_Process_attributeaggregator extends Simple
                 // Filter out values that don't match
                 $this->filter_attribute_values($name,$values);
                 if (empty($values)) {
-                    SimpleSAML\Logger::info("[attributeaggregator] No values left for attribute ".$name);
+                    Logger::info("[attributeaggregator] No values left for attribute ".$name);
                     continue;
                 }
 
@@ -280,7 +296,7 @@ class sspmod_attributeaggregator_Auth_Process_attributeaggregator extends Simple
                             self::override_attribute_values($state,$name,$values);
                             break;
                         case 'keep':
-                            SimpleSAML\Logger::info('[attributeaggregator] Keeping attribute '.$name);
+                            Logger::info('[attributeaggregator] Keeping attribute '.$name);
                             continue 2;
                             break;
                         case 'merge':
@@ -305,7 +321,7 @@ class sspmod_attributeaggregator_Auth_Process_attributeaggregator extends Simple
                 if (empty($this->attributes)) {
                     self::merge_attribute_values($state,$name,$values);
                 } else {
-                    SimpleSAML\Logger::info("[attributeaggregator] Rejecting attribute ".$name);
+                    Logger::info("[attributeaggregator] Rejecting attribute ".$name);
                     continue;
                 }
             }
@@ -323,7 +339,7 @@ class sspmod_attributeaggregator_Auth_Process_attributeaggregator extends Simple
 
     private static function merge_attribute_values (&$state,$name,$values) {
         if (isset($state['Attributes'][$name])) {
-            SimpleSAML\Logger::info('[attributeaggregator] Merging attribute '.$name);
+            Logger::info('[attributeaggregator] Merging attribute '.$name);
             $state['Attributes'][$name] = array_merge($state['Attributes'][$name],$values);
         } else {
             self::override_attribute_values($state,$name,$values);
@@ -332,9 +348,9 @@ class sspmod_attributeaggregator_Auth_Process_attributeaggregator extends Simple
 
     private static function override_attribute_values (&$state,$name,$values) {
         if (!empty($state['Attributes'][$name])) {
-            SimpleSAML\Logger::info('[attributeaggregator] Overriding attribute '.$name);
+            Logger::info('[attributeaggregator] Overriding attribute '.$name);
         } else {
-            SimpleSAML\Logger::info('[attributeaggregator] Getting new attribute '.$name);
+            Logger::info('[attributeaggregator] Getting new attribute '.$name);
         }
         $state['Attributes'][$name] = $values;
     }
