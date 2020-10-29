@@ -77,6 +77,24 @@ Example:
 
                 ),
 
+You have to define PAOS acs endpoint with correct Location (take a look on VIRTUAL_HOST env variable), if the AA is a simpleSAMLphp implementation with simplesamlphp-module-aa
+
+authsources.php in the current sp array,  ie. `default-sp`
+```
+        'AssertionConsumerService' => [
+          [
+            'index' => 0,
+            'isDefault' => true,
+            'Location' => 'https://' . getenv('VIRTUAL_HOST') . '/simplesaml/module.php/saml/sp/saml1-acs.php/default-sp',
+            'Binding' => 'urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST',
+          ],
+          [
+            'index' => 1,
+            'Location' => 'https://' . getenv('VIRTUAL_HOST') . '/simplesaml/module.php/saml/sp/saml1-acs.php/default-sp',
+            'Binding' => 'urn:oasis:names:tc:SAML:2.0:bindings:PAOS',
+          ],
+        ],
+```
 
 Options
 -------
