@@ -239,7 +239,6 @@ class attributeaggregator extends ProcessingFilter
             $query->setID(Random::generateID());
             // TODO: should this call be made optional?
             Message::addSign($this->selfMetadata,$this->aaMetadata,$query);
-
             // send attribute query
             Logger::debug('Sending attribute query: '.var_export($query,true));
             $binding = new SOAPClient();
@@ -255,7 +254,7 @@ class attributeaggregator extends ProcessingFilter
             $assertion = $response->getAssertions()[0]; // TODO Can there be more than 1?
             if (empty($assertion)) {
                 throw new \RuntimeException('Got an empty SAML Response');
-            }
+	    }
             $this->mergeAttributes($state, $assertion->getAttributes());
         
         } catch (\Exception $e) {
@@ -363,14 +362,18 @@ class attributeaggregator extends ProcessingFilter
         if(array_key_exists('*',$requestedAttributes)) {
             unset($requestedAttributes['*']);
         }
-        foreach ($requestedAttributes as $attribute) {
-            /* Reasons for NOT including the acceptable values in the request:
-             *   - the SP might not want to let the AA know which values it accepts,
-             *   - we can't rely on that the AA sends the matching values anyway,
-             *   - in the future we might support regexp in the values array.
-             */
-            $requestedAttribute[$attribute] = array();
-        }
+        /* Reasons for NOT including the acceptable values in the request:
+         *   - the SP might not want to let the AA know which values it accepts,
+         *   - we can't rely on that the AA sends the matching values anyway,
+         *   - in the future we might support regexp in the values array.
+         */
+	
+	foreach ($requestedAttributes as $key => $value) {
+          if ($value === 0){
+	    $requestedAttributes[$key] = []; 
+          }
+	}
+	 
         return $requestedAttributes;
     }
 
